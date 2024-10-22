@@ -1,0 +1,44 @@
+#include "mbed.h"
+#include "C12832.h"
+#include "QEI.h"
+
+QEI encoder1(PC_2,PC_3,NC,256,QEI::X4_ENCODING);
+QEI encoder2(PC_8,PC_6,NC,256,QEI::X4_ENCODING);
+
+DigitalOut enable(PC_5);
+C12832 lcd(D11, D13, D12, D7, D10);
+
+int RPM1;
+int RPM2;
+int Pulse1 = 0;
+int Pulse2 = 0;				
+int Last_Pulse1 = 0;
+int Last_Pulse2 = 0;
+
+Ticker TIC;
+void NUM1(){
+Pulse1=encoder1.getPulses()-Last_Pulse1;
+Last_Pulse1=encoder1.getPulses();
+}
+void NUM2(){
+Pulse2=encoder2.getPulses()-Last_Pulse2;
+Last_Pulse2=encoder2.getPulses();
+}
+void readEncoder(){
+    NUM1();
+    NUM2();
+}
+
+int main(){
+TIC.attach(&readEncoder,0.1);
+    while(1){
+        RPM1 = Pulse1 * 60 /(0.1*1024);
+        RPM2 = Pulse2 * 60 /(0.1*1024);
+        wait(0.1);
+        lcd.cls();
+        lcd.locate(0, 0);
+        lcd.printf("pulse =%d  %d",encoder1.getPulses(),encoder2.getPulses());
+        lcd.locate(0,10);
+        lcd.printf("RPM %d  %d",RPM1,RPM2 );
+    }
+}
